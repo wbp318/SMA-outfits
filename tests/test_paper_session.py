@@ -46,3 +46,29 @@ def test_absorb_accumulates_fill_count(tmp_path):
     pf.apply_fill(Fill("BTC/USD", Side.BUY, 0.01, 50_000.0, fee=0.0))
     s.absorb(pf, "2026-01-01T00:00:00+00:00", 1000.0)
     assert s.n_fills == 1
+
+
+def test_corrupt_session_file_fails_closed(tmp_path):
+    path = tmp_path / "s.json"
+    path.write_text("{ not valid json", encoding="utf-8")
+    with pytest.raises(SystemExit):
+        PaperSession.load(path, symbol="BTC/USD", initial_cash=1000.0)
+
+
+def test_load_tolerates_unknown_keys(tmp_path):
+    # Schema drift: an old/extra key on disk must not crash the load.
+    path = tmp_path / "s.json"
+    path.write_text(
+        '{"symbol":"BTC/USD","initial_cash":1000.0,"cash":1000.0,"obsolete_field":1}',
+        encoding="utf-8")
+    s = PaperSession.load(path, symbol="BTC/USD", initial_cash=1000.0)
+    assert s.cash == 1000.0
+
+
+def test_last_order_ts_persists(tmp_path):
+    path = tmp_path / "s.json"
+    s = PaperSession.load(path, symbol="BTC/USD", initial_cash=1000.0)
+    s.last_order_ts = 1_700_000_000.0
+    s.save(path)
+    reloaded = PaperSession.load(path, symbol="BTC/USD", initial_cash=1000.0)
+    assert reloaded.last_order_ts == 1_700_000_000.0

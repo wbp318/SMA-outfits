@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 
 from .portfolio import Portfolio
@@ -30,6 +30,7 @@ class PaperSession:
     positions: dict[str, list[float]] = field(default_factory=dict)   # sym -> [qty, avg_price]
     realized_pnl: float = 0.0
     last_bar_ts: str | None = None                                    # ISO of last processed bar
+    last_order_ts: float | None = None                                # for the cross-tick throttle
     equity_curve: list[list] = field(default_factory=list)            # [[iso, equity], ...]
     n_fills: int = 0
 
@@ -37,10 +38,16 @@ class PaperSession:
     @classmethod
     def load(cls, path: str | Path, *, symbol: str, initial_cash: float) -> PaperSession:
         p = Path(path)
-        if p.exists():
+        if not p.exists():
+            return cls(symbol=symbol, initial_cash=initial_cash, cash=initial_cash)
+        try:
             data = json.loads(p.read_text(encoding="utf-8"))
-            return cls(**data)
-        return cls(symbol=symbol, initial_cash=initial_cash, cash=initial_cash)
+            known = {f.name for f in fields(cls)}
+            return cls(**{k: v for k, v in data.items() if k in known})  # tolerate schema drift
+        except Exception as exc:  # corrupt/truncated file — fail closed, don't silently lose state
+            raise SystemExit(
+                f"paper session file {p} is unreadable ({type(exc).__name__}: {exc}); "
+                f"run the command with --reset to start a fresh session") from exc
 
     def save(self, path: str | Path) -> None:
         p = Path(path)
@@ -55,8 +62,11 @@ class PaperSession:
     # -- portfolio bridge -------------------------------------------------
     def to_portfolio(self) -> Portfolio:
         pf = Portfolio(cash=self.cash, realized_pnl=self.realized_pnl)
-        for sym, (qty, avg) in self.positions.items():
-            pf.positions[sym] = Position(sym, qty, avg)
+        for sym, entry in self.positions.items():
+            if not (isinstance(entry, (list, tuple)) and len(entry) == 2):
+                raise SystemExit(f"corrupt position entry for {sym}: {entry!r}; run --reset")
+            qty, avg = entry
+            pf.positions[sym] = Position(sym, float(qty), float(avg))
         return pf
 
     def absorb(self, pf: Portfolio, bar_ts: str, equity: float) -> None:

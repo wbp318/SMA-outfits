@@ -51,15 +51,24 @@ def test_regime_and_no_lookahead_during_warmup():
     assert (r == -1).any()
 
 
-def test_crossover_fires_once_per_event():
-    # A single up-then-down move produces exactly one +1 and one -1.
+def test_crossover_fires_only_on_genuine_flips():
+    # Down (regime forms bearish), then up (genuine golden cross +1), then down
+    # (genuine death cross -1). Both events are real flips between formed regimes.
     prices = pd.Series(
-        [10, 11, 12, 13, 14, 15, 14, 13, 12, 11, 10, 9], dtype="float64"
+        [20, 19, 18, 17, 16, 15, 16, 18, 20, 22, 24, 22, 20, 18, 16, 14], dtype="float64"
     )
     x = crossover(prices, fast=2, slow=4)
     assert set(x.unique()).issubset({-1, 0, 1})
     assert (x == 1).sum() >= 1
     assert (x == -1).sum() >= 1
+
+
+def test_crossover_masks_warmup_transition():
+    # A purely rising series: regime goes 0 (warm-up) -> +1 once formed. That
+    # 0 -> +1 is NOT a crossover and must not fire a buy event.
+    prices = pd.Series(np.linspace(100, 200, 40), dtype="float64")
+    x = crossover(prices, fast=5, slow=20)
+    assert (x == 0).all()
 
 
 def test_key_level_breach():

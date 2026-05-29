@@ -61,9 +61,9 @@ class DataCfg(_Base):
 
 
 class BacktestCfg(_Base):
-    initial_cash: float = 10_000
-    fee_pct: float = 0.0026
-    slippage_pct: float = 0.0005
+    initial_cash: float = Field(10_000, gt=0)
+    fee_pct: float = Field(0.0026, ge=0, le=0.1)
+    slippage_pct: float = Field(0.0005, ge=0, le=0.1)
 
 
 class LiveCfg(_Base):
@@ -91,37 +91,37 @@ class AppConfig(_Base):
 # --------------------------------------------------------------------------- #
 class PositionCfg(_Base):
     sizing: Literal["risk_based", "fixed_fraction"] = "risk_based"
-    risk_per_trade_pct: float = 0.0075      # risk this fraction of equity per trade
-    max_position_pct: float = 0.10          # cap any single position at this fraction
-    min_position_quote: float = 25.0        # skip trades smaller than this (fees)
+    risk_per_trade_pct: float = Field(0.0075, gt=0, le=1)   # fraction of equity risked per trade
+    max_position_pct: float = Field(0.10, gt=0, le=1)       # cap a single position's fraction
+    min_position_quote: float = Field(25.0, ge=0)           # skip trades smaller than this
 
 
 class StopsCfg(_Base):
     require_stop_on_entry: bool = True       # never enter without a stop
     method: Literal["atr", "percent"] = "atr"
-    stop_loss_pct: float = 0.05              # used when method == percent
-    atr_period: int = 14
-    atr_stop_mult: float = 2.5               # stop = entry - atr_stop_mult * ATR
+    stop_loss_pct: float = Field(0.05, gt=0, le=1)          # used when method == percent
+    atr_period: int = Field(14, ge=1)
+    atr_stop_mult: float = Field(2.5, gt=0)                 # stop = entry - atr_stop_mult * ATR
 
 
 class PortfolioCfg(_Base):
-    max_gross_exposure_pct: float = 0.40
-    max_open_positions: int = 4
-    max_positions_per_asset: int = 1
-    reserve_cash_pct: float = 0.10           # always keep this fraction in cash
+    max_gross_exposure_pct: float = Field(0.40, gt=0, le=1)
+    max_open_positions: int = Field(4, ge=1)
+    max_positions_per_asset: int = Field(1, ge=1)
+    reserve_cash_pct: float = Field(0.10, ge=0, le=1)       # always keep this fraction in cash
 
 
 class KillSwitchCfg(_Base):
-    max_daily_loss_pct: float = 0.04
-    max_drawdown_pct: float = 0.15
-    max_consecutive_losses: int = 5
+    max_daily_loss_pct: float = Field(0.04, gt=0, le=1)
+    max_drawdown_pct: float = Field(0.15, gt=0, le=1)
+    max_consecutive_losses: int = Field(5, ge=1)
     state_file: str = "data/kill_switch_state.json"
 
 
 class GuardsCfg(_Base):
-    min_seconds_between_orders: float = 5.0
-    max_order_notional_quote: float = 1000.0
-    max_slippage_pct: float = 0.01           # reject if expected slippage exceeds this
+    min_seconds_between_orders: float = Field(5.0, ge=0)
+    max_order_notional_quote: float = Field(1000.0, gt=0)
+    max_slippage_pct: float = Field(0.01, gt=0, le=1)       # reject live fills past this deviation
 
 
 class RiskConfig(_Base):

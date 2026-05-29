@@ -64,3 +64,16 @@ def test_extra_field_is_rejected():
 
     with pytest.raises(ValidationError):
         RiskConfig.model_validate({"position": {"sizing": "risk_based"}, "bogus": 1})
+
+
+def test_out_of_range_pct_rejected():
+    # A fat-fingered 75 (meaning 75%) instead of 0.75 must fail validation,
+    # not silently size 75x equity.
+    from pydantic import ValidationError
+
+    from smaoutfits.config import RiskConfig
+
+    with pytest.raises(ValidationError):
+        RiskConfig.model_validate({"position": {"risk_per_trade_pct": 75}})
+    with pytest.raises(ValidationError):
+        RiskConfig.model_validate({"kill_switch": {"max_daily_loss_pct": -0.1}})

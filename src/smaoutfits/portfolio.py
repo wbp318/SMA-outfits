@@ -26,13 +26,17 @@ class Portfolio:
         """Update cash and positions from an executed fill."""
         self.fills.append(fill)
         if fill.side == Side.BUY:
-            self.cash -= fill.qty * fill.price + fill.fee
+            # Cost basis INCLUDES the entry fee, so realized PnL on the eventual
+            # sell is net of both fees — otherwise a fee-losing trade can be
+            # scored as a win and slip past the consecutive-loss kill switch.
+            buy_cost = fill.qty * fill.price + fill.fee
+            self.cash -= buy_cost
             held = self.positions.get(fill.symbol)
             if held is None:
-                self.positions[fill.symbol] = Position(fill.symbol, fill.qty, fill.price)
+                self.positions[fill.symbol] = Position(fill.symbol, fill.qty, buy_cost / fill.qty)
             else:
                 new_qty = held.qty + fill.qty
-                held.avg_price = (held.qty * held.avg_price + fill.qty * fill.price) / new_qty
+                held.avg_price = (held.qty * held.avg_price + buy_cost) / new_qty
                 held.qty = new_qty
         else:  # SELL
             held = self.positions.get(fill.symbol)

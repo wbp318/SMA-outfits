@@ -26,10 +26,12 @@ def test_portfolio_buy_then_sell_tracks_cash_and_pnl():
     pf.apply_fill(Fill("BTC/USD", Side.BUY, qty=1.0, price=100.0, fee=1.0))
     assert pf.cash == pytest.approx(899.0)            # 1000 - 100 - 1 fee
     assert pf.positions["BTC/USD"].qty == 1.0
+    assert pf.positions["BTC/USD"].avg_price == pytest.approx(101.0)  # cost basis incl entry fee
     pf.apply_fill(Fill("BTC/USD", Side.SELL, qty=1.0, price=110.0, fee=1.0))
     assert "BTC/USD" not in pf.positions
     assert pf.cash == pytest.approx(899.0 + 110.0 - 1.0)
-    assert pf.last_trade_pnl == pytest.approx(1.0 * (110.0 - 100.0) - 1.0)
+    # Net of BOTH fees: +10 price move - 1 entry - 1 exit = 8.
+    assert pf.last_trade_pnl == pytest.approx(8.0)
 
 
 def test_portfolio_equity_marks_to_market():
@@ -101,6 +103,20 @@ def test_engine_buys_in_uptrend_and_exits_in_downtrend(tmp_path):
     assert Side.BUY in sides and Side.SELL in sides     # entered the uptrend, exited the downtrend
     assert len(equity) == len(df)
     assert equity.iloc[-1] > 0
+
+
+def test_engine_acts_on_prior_bar_signal_not_same_bar(tmp_path):
+    # No lookahead: the buy must fill on the bar AFTER the signal turned long,
+    # at that bar's close — never on the bar whose close produced the signal.
+    df = _ohlcv(list(np.linspace(100, 200, 60)))
+    engine, pf = _engine(tmp_path)
+    target = engine.strategy.target_position(df)
+    warmup = engine.strategy.warmup_bars()
+    engine.run_replay(df)
+    buys = [f for f in pf.fills if f.side == Side.BUY]
+    assert buys
+    first_i = next(i for i in range(len(df)) if i > warmup and target.iloc[i - 1] == 1.0)
+    assert buys[0].price == pytest.approx(float(df["close"].iloc[first_i]) * (1 + 0.0005))
 
 
 def test_engine_respects_kill_switch_halt(tmp_path):

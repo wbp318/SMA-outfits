@@ -99,12 +99,18 @@ class MarketData:
         max_bars: int = 5000,
         use_cache: bool = True,
         page_limit: int = 720,
+        drop_incomplete: bool = True,
     ) -> pd.DataFrame:
         """Return an OHLCV DataFrame for ``symbol`` at ``timeframe``.
 
         Merges with any cached data and fetches only newer bars when possible.
         ``max_bars`` caps how far back pagination walks. Falls back gracefully
         to whatever the exchange returns (see the Kraken history caveat above).
+
+        ``drop_incomplete`` (default True) discards the final, still-forming
+        candle returned by a live exchange so EVERY caller — backtest, paper, and
+        the live loop — only ever sees fully *closed* bars. This is the single
+        source of "closed bar" truth; it is also never written to the cache.
         """
         cached = self._read_cache(symbol, timeframe) if use_cache else None
         tf_ms = timeframe_to_ms(timeframe)
@@ -134,6 +140,10 @@ class MarketData:
             time.sleep(self.client.rateLimit / 1000)
 
         fetched = _to_frame(rows) if rows else pd.DataFrame(columns=OHLCV_COLUMNS)
+        # The last freshly-fetched candle is the current, still-forming interval —
+        # drop it so neither the cache nor any caller ever acts on a partial bar.
+        if drop_incomplete and not fetched.empty:
+            fetched = fetched.iloc[:-1]
         if cached is not None:
             combined = pd.concat([cached, fetched])
             combined = combined[~combined.index.duplicated(keep="last")].sort_index()

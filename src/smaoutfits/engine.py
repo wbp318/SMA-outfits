@@ -67,16 +67,26 @@ class Engine:
         return decision
 
     def on_bar(self, df: pd.DataFrame):
-        """Process the most recent closed bar of ``df`` (live/paper entry point)."""
-        target = float(self.strategy.target_position(df).iloc[-1])
-        atr_val = self._atr_at(df, -1)
+        """Process the most recent closed bar of ``df`` (live/paper entry point).
+
+        No-lookahead: the decision uses the signal from the PRIOR closed bar and
+        fills at the latest closed bar's price — the same one-bar lag the
+        vectorized backtester applies (``target.shift(1)``). You cannot transact
+        at the close you only learn the signal from.
+        """
+        if len(df) < 2:
+            return None
+        target = float(self.strategy.target_position(df).iloc[-2])
+        atr_val = self._atr_at(df, -2)
         return self._act(df.index[-1], float(df["close"].iloc[-1]), target, atr_val)
 
     def run_replay(self, df: pd.DataFrame) -> pd.Series:
         """Replay a full OHLCV frame bar by bar; returns the equity curve.
 
-        Strategy signals and ATR are precomputed once (they are deterministic
-        vectorized transforms) for speed; each bar then decides on its own close.
+        Signals/ATR are precomputed once (deterministic vectorized transforms).
+        Each bar acts on the PREVIOUS bar's signal, filled at the current bar's
+        close — matching the backtester's one-bar lag so paper and backtest are
+        directly comparable and neither captures the move that triggered it.
         """
         target = self.strategy.target_position(df)
         atr_series = atr(df["high"], df["low"], df["close"], self.risk.risk.stops.atr_period)
@@ -85,9 +95,10 @@ class Engine:
         for i in range(len(df)):
             ts = df.index[i]
             price = float(df["close"].iloc[i])
-            if i >= warmup:
-                av = atr_series.iloc[i]
-                self._act(ts, price, float(target.iloc[i]), None if pd.isna(av) else float(av))
+            if i > warmup:  # need a prior, fully-formed bar's signal
+                sig = float(target.iloc[i - 1])
+                av = atr_series.iloc[i - 1]
+                self._act(ts, price, sig, None if pd.isna(av) else float(av))
             equity_curve.append(self.portfolio.equity({self.symbol: price}))
         return pd.Series(equity_curve, index=df.index, name="equity")
 

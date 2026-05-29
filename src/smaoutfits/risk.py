@@ -49,9 +49,13 @@ class KillSwitch:
     A missing file is a fresh install and initializes cleanly.
     """
 
-    def __init__(self, cfg, state_path: str | Path | None = None):
+    def __init__(self, cfg, state_path: str | Path | None = None, *, autosave: bool = True):
         self.cfg = cfg
         self.path = Path(state_path or cfg.state_file)
+        # When autosave is False, routine updates buffer in memory and are flushed
+        # once via flush() — so the caller can order the kill-state write AFTER the
+        # session write and avoid a half-committed tick. A halt always persists.
+        self.autosave = autosave
         self.state = self._load()
 
     def _load(self) -> _KillState:
@@ -73,6 +77,15 @@ class KillSwitch:
             fh.flush()
             os.fsync(fh.fileno())
         os.replace(tmp, self.path)   # atomic on POSIX and Windows
+
+    def _save(self) -> None:
+        """Persist now unless deferred (autosave=False); see flush()."""
+        if self.autosave:
+            self._persist()
+
+    def flush(self) -> None:
+        """Force-persist buffered state (used by the deferred paper-tick path)."""
+        self._persist()
 
     @property
     def halted(self) -> bool:
@@ -109,7 +122,7 @@ class KillSwitch:
             if dd <= -self.cfg.max_drawdown_pct:
                 self.halt(f"drawdown {dd:.2%} <= -{self.cfg.max_drawdown_pct:.2%}")
                 return
-        self._persist()
+        self._save()
 
     def record_trade_result(self, pnl: float) -> None:
         if pnl < 0:
@@ -119,7 +132,7 @@ class KillSwitch:
         if self.state.consecutive_losses >= self.cfg.max_consecutive_losses:
             self.halt(f"{self.state.consecutive_losses} consecutive losing trades")
             return
-        self._persist()
+        self._save()
 
 
 # --------------------------------------------------------------------------- #

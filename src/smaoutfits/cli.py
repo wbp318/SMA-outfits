@@ -113,12 +113,11 @@ def _paper_tick(app, risk, strategy, symbol, timeframe, session_path, md) -> dic
     long-running --poll session survives a dropped request and tries again.
     """
     try:
+        # fetch_ohlcv already drops the still-forming candle — this is closed bars only.
         df = md.fetch_ohlcv(symbol, timeframe, max_bars=720)
     except Exception as exc:
         return {"status": "fetch error (will retry)", "error": f"{type(exc).__name__}: {exc}"}
-    # Kraken's final candle is the CURRENT (still-forming) interval — drop it so we
-    # only ever act on a fully closed bar (no acting on partial data).
-    df = df.iloc[:-1]
+    # Need the warm-up plus one prior bar (the engine acts on the previous bar's signal).
     if len(df) < strategy.warmup_bars() + 2:
         return {"status": "warming up", "bars": len(df)}
 
@@ -128,16 +127,21 @@ def _paper_tick(app, risk, strategy, symbol, timeframe, session_path, md) -> dic
         return {"status": "no new closed bar", "bar": bar_ts}
 
     portfolio = session.to_portfolio()
-    kill = KillSwitch(risk.kill_switch, state_path="data/kill_switch_paper.json")
-    engine = Engine(symbol=symbol, strategy=strategy, risk=RiskManager(app, risk, kill),
-                    portfolio=portfolio, broker=SimulatedBroker(app.backtest.fee_pct,
-                                                                app.backtest.slippage_pct),
+    # Defer kill-switch persistence so we can commit it AFTER the session write —
+    # a crash mid-tick then re-runs cleanly instead of half-committing.
+    kill = KillSwitch(risk.kill_switch, state_path="data/kill_switch_paper.json", autosave=False)
+    rm = RiskManager(app, risk, kill)
+    rm._last_order_ts = session.last_order_ts   # restore the cross-tick order throttle
+    engine = Engine(symbol=symbol, strategy=strategy, risk=rm, portfolio=portfolio,
+                    broker=SimulatedBroker(app.backtest.fee_pct, app.backtest.slippage_pct),
                     is_live=False)
     decision = engine.on_bar(df)
     price = float(df["close"].iloc[-1])
     equity = portfolio.equity({symbol: price})
     session.absorb(portfolio, bar_ts, equity)
-    session.save(session_path)
+    session.last_order_ts = rm._last_order_ts   # persist throttle state across ticks
+    session.save(session_path)                  # durable first: marks the bar processed
+    kill.flush()                                # then persist kill state
     held = portfolio.positions.get(symbol)
     return {
         "status": "stepped", "bar": bar_ts, "price": price, "equity": round(equity, 2),

@@ -2,6 +2,41 @@
 
 All notable changes to this project are documented here.
 
+## [0.4.1] — 2026-05-29
+
+Hardening release from a multi-agent adversarial review (14 confirmed findings,
+each independently verified before fixing). No new features.
+
+### Fixed — HIGH
+- **Engine lookahead:** `run_replay`/`on_bar` now act on the **prior** bar's signal
+  (one-bar lag) to match the backtester — removes a same-bar optimism that made paper
+  look systematically better than backtest.
+- **Live fills booked from the mark:** `KrakenBroker` now books the **actual** fill
+  (price/fee/executed volume from Kraken's order record) and **fails closed** if it
+  can't confirm — no more estimates feeding the ledger and kill switch.
+- **Dead slippage control:** `max_slippage_pct` is now enforced — the live broker
+  rejects an order whose touch price deviates beyond the cap.
+- **No config range checks:** all `*_pct` / fee / cash fields now validate their range,
+  so `risk_per_trade_pct: 75` (meaning 0.75) fails loudly instead of sizing 75× equity.
+
+### Fixed — MEDIUM
+- Order throttle (`last_order_ts`) now **persists across paper ticks** (was reset each tick).
+- Kill-switch state is **committed after** the session write, so a crash mid-tick re-runs
+  cleanly instead of half-committing and double-counting a trade.
+- Realized PnL / consecutive-loss kill switch are now **fee-inclusive** (entry fee folded
+  into cost basis) — fee-losing trades are no longer scored as wins.
+- Live order volume **rounds down** to lot precision and is rejected below Kraken
+  `ordermin`/`costmin`.
+- The still-forming candle is dropped at the **data layer**, so backtest, paper, and live
+  all see closed bars only (one source of truth, instead of one caller remembering to drop it).
+
+### Fixed — LOW
+- `crossover()` no longer emits phantom buy/sell events on warm-up/neutral transitions.
+- `PaperSession.load` fails closed on a corrupt file and tolerates schema drift.
+
+### Tests
+- 72 tests (up from 63), lint-clean.
+
 ## [0.4.0] — 2026-05-29
 
 Forward paper trading, wired to the README's own strategy. Still fake money.

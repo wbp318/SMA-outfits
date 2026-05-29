@@ -68,9 +68,11 @@ def crossover(close: pd.Series, fast: int, slow: int) -> pd.Series:
     Only the transition bar is non-zero, so each event fires exactly once.
     """
     r = regime(close, fast, slow)
-    # Difference of the regime: a 0 -> 1 or -1 -> 1 transition yields a positive
-    # diff (buy); 1 -> -1 yields negative (sell). Clip to {-1, 0, +1}.
     events = r.diff().fillna(0)
+    # Only count genuine sign flips between two *formed* regimes. Transitions that
+    # touch the neutral/warm-up state (regime == 0) are not real crossovers and
+    # must not fire a trade signal.
+    events[(r == 0) | (r.shift(1).fillna(0) == 0)] = 0
     return np.sign(events).astype("int64")
 
 
