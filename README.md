@@ -86,8 +86,8 @@ permissions (you do **not** need withdrawal permission — leave it off).
 1. ✅ **Data + backtester** — pull OHLCV, run any outfit on any symbol, report vs buy-and-hold.
 2. ✅ **Empirical outfit study** — backtest the outfits across the crypto universe; rank honestly.
 3. ✅ **Risk layer** — risk-based sizing, mandatory stops, crash-proof daily-loss/drawdown kill switch.
-4. ⬜ **Broker abstraction + paper trading** — `KrakenBroker` (python-kraken-sdk) + `PaperBroker` on the live feed (needs your Kraken API keys).
-5. ⬜ **Live (tiny)** — only after 4, with small size and the kill switch armed (needs your explicit go-ahead).
+4. 🟦 **Broker abstraction + paper trading** — done: portfolio ledger, `SimulatedBroker`, engine, CLI, paper trading on Kraken's public feed (fake money, no keys). Remaining: live `KrakenBroker` (python-kraken-sdk) — needs your Kraken API keys.
+5. ⬜ **Live (tiny)** — only after the live broker is in, with small size and the kill switch armed (needs your explicit go-ahead).
 6. ⬜ **Webull adapter** — once your account is verified and you have OpenAPI access (official UAT sandbox needs no approval).
 
 ## License

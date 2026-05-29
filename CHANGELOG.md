@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented here.
 
+## [0.2.0] — 2026-05-29
+
+Paper-trading layer: the engine and broker abstraction that let you forward-test
+any strategy with fake money on Kraken's public feed. Still no real orders.
+
+### Added
+- **Portfolio ledger** (`portfolio.py`): cash, positions, mark-to-market equity, realized PnL.
+- **Broker abstraction** (`broker.py`): `Broker` protocol + `SimulatedBroker` (fees + slippage);
+  `make_broker` factory enforcing the no-live-orders gate (#1).
+- **Engine** (`engine.py`): one event loop shared by backtest replay and paper trading —
+  strategy → risk → broker → portfolio → kill switch, identical code path for paper and live.
+- **CLI** (`python -m smaoutfits {study,backtest,paper}`): stdlib argparse, no extra deps.
+  Paper trading runs on Kraken's PUBLIC feed — no API keys, no real orders.
+- 9 more tests (53 total), still lint-clean.
+
+### Notes
+- The live `KrakenBroker` is still pending (needs your Kraken API keys + an explicit
+  go-ahead). Paper is validated first; live order placement stays locked behind `live.confirm`.
+
 ## [0.1.0] — 2026-05-29
 
 First milestone: a tested moving-average **research + backtest framework**, plus

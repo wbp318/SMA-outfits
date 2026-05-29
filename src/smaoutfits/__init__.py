@@ -3,4 +3,4 @@
 See docs/ARCHITECTURE.md for the module layout and interfaces.
 """
 
-__version__ = "0.0.1"
+__version__ = "0.2.0"
