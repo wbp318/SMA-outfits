@@ -2,6 +2,34 @@
 
 All notable changes to this project are documented here.
 
+## [0.4.0] — 2026-05-29
+
+Forward paper trading, wired to the README's own strategy. Still fake money.
+
+### Added
+- **`paper-live` CLI** — a forward paper session that steps the latest **closed**
+  bar (drops Kraken's still-forming candle so it never acts on partial data),
+  persists cash/positions/equity to `data/` (atomic write, **resumable**), and is
+  **idempotent per bar** (won't double-count). Survives transient network errors
+  so a long `--poll` run keeps going. `--once`, `--poll`, `--iterations`, `--reset`.
+- **`PaperSession`** (`paper_session.py`) — persistent forward-session state.
+- **README strategy selection** — `--system spx_system|ixic_system|dji_system`
+  runs the source's "systems" (10/50/200, 20/100/250, 30/60/90/300/600/900 trend
+  rules). `paper-live` defaults to the README's flagship **10/50/200 "System"**.
+- 4 more tests (63 total), lint-clean.
+
+### Usage
+```bash
+# Paper-trade the README's 10/50/200 System on BTC/USD 30m, one tick:
+python -m smaoutfits paper-live --system spx_system --symbol BTC/USD --tf 30m --once
+# Then schedule it once per bar (Task Scheduler / cron / Claude /loop) to forward-test live.
+```
+
+### Notes
+- Still paper-only (`SimulatedBroker`, no real orders). The README strategy is run
+  here because you asked to — the v0.1.0 study still stands: it has no measured edge,
+  and paper is the right place to watch that play out at zero risk.
+
 ## [0.3.0] — 2026-05-29
 
 Live Kraken broker — built and **proven safe** against a real account in

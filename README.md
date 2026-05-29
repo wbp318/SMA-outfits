@@ -85,12 +85,25 @@ KRAKEN_API_SECRET=your_secret
 For Kraken, create a key in **Settings → API** with **query** + **trade**
 permissions (you do **not** need withdrawal permission — leave it off).
 
+## Paper-trade the README strategy (no keys, no risk)
+
+```bash
+# Empirical study (does any outfit beat buy-and-hold?):
+PYTHONPATH=src python -m smaoutfits study
+
+# Forward paper session on the README's 10/50/200 "System", one tick:
+PYTHONPATH=src python -m smaoutfits paper-live --system spx_system --symbol BTC/USD --tf 30m --once
+```
+Schedule that `paper-live` command once per bar (Windows Task Scheduler, cron, or
+Claude's `/loop`) and it forward-tests with fake money, persisting an equity curve
+to `data/`. Swap `--system ixic_system|dji_system`, or `--outfit <id>` for any outfit.
+
 ## Roadmap
 
 1. ✅ **Data + backtester** — pull OHLCV, run any outfit on any symbol, report vs buy-and-hold.
 2. ✅ **Empirical outfit study** — backtest the outfits across the crypto universe; rank honestly.
 3. ✅ **Risk layer** — risk-based sizing, mandatory stops, crash-proof daily-loss/drawdown kill switch.
-4. 🟦 **Broker abstraction + paper trading** — done: portfolio ledger, `SimulatedBroker`, engine, CLI, paper trading on Kraken's public feed (fake money, no keys). Remaining: live `KrakenBroker` (python-kraken-sdk) — needs your Kraken API keys.
+4. ✅ **Broker abstraction + paper trading** — portfolio ledger, `SimulatedBroker`, engine, CLI, and a **forward paper session** (`paper-live`) on Kraken's public feed (fake money, no keys), resumable and idempotent per closed bar.
 5. 🟦 **Live broker** — `KrakenBroker` built and proven in **validate-only** mode against a real account (`python -m smaoutfits check-kraken`). Real orders still OFF — need USD funding, `live.confirm`, and your explicit go-ahead.
 6. ⬜ **Webull adapter** — once your account is verified and you have OpenAPI access (official UAT sandbox needs no approval).
 
