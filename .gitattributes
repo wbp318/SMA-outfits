@@ -41,5 +41,32 @@
 *.whl    binary
 *.pyc    binary
 
-# --- GitHub language stats: the source doc is provenance, not our code ---
-docs/SOURCE_ANALYSIS.md linguist-documentation
+# --- GitHub Linguist: surface EVERY language in the repo's language stats ---
+# By default Linguist counts only "programming"/"markup" languages and hides
+# "data" and "prose" (YAML, TOML, JSON, CSV, Markdown, Text, INI, shell, etc.).
+# Force them all detectable so the language bar shows every language present.
+*.py            linguist-detectable=true
+*.pyi           linguist-detectable=true
+*.md            linguist-detectable=true
+*.markdown      linguist-detectable=true
+*.txt           linguist-detectable=true
+*.yml           linguist-detectable=true
+*.yaml          linguist-detectable=true
+*.toml          linguist-detectable=true
+*.cfg           linguist-detectable=true
+*.ini           linguist-detectable=true
+*.json          linguist-detectable=true
+*.csv           linguist-detectable=true
+*.tsv           linguist-detectable=true
+*.ipynb         linguist-detectable=true
+*.ps1           linguist-detectable=true
+*.psm1          linguist-detectable=true
+*.bat           linguist-detectable=true
+*.cmd           linguist-detectable=true
+*.sh            linguist-detectable=true
+requirements*.txt linguist-detectable=true
+.gitignore      linguist-detectable=true
+.gitattributes  linguist-detectable=true
+
+# Make sure nothing is silently excluded from the stats.
+*               -linguist-documentation -linguist-vendored -linguist-generated
