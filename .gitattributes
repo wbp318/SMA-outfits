@@ -1,0 +1,45 @@
+# Normalize line endings: store everything as LF in the repo and check out LF
+# everywhere (this overrides core.autocrlf), so the working tree is identical on
+# every OS and Git stops warning about CRLF conversion on Windows.
+* text=auto eol=lf
+
+# --- Explicit text types (clarity / robustness) ---
+*.py     text eol=lf
+*.pyi    text eol=lf
+*.md     text eol=lf
+*.txt    text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.toml   text eol=lf
+*.cfg    text eol=lf
+*.ini    text eol=lf
+*.json   text eol=lf
+*.csv    text eol=lf
+*.ipynb  text eol=lf
+.gitignore     text eol=lf
+.gitattributes text eol=lf
+
+# --- Windows scripts: cmd/batch need CRLF; PowerShell & sh are fine with LF ---
+*.bat    text eol=crlf
+*.cmd    text eol=crlf
+*.ps1    text eol=lf
+*.psm1   text eol=lf
+*.sh     text eol=lf
+
+# --- Binary files: never normalize, never diff as text ---
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.pdf    binary
+*.parquet binary
+*.feather binary
+*.xlsx   binary
+*.zip    binary
+*.gz     binary
+*.whl    binary
+*.pyc    binary
+
+# --- GitHub language stats: the source doc is provenance, not our code ---
+docs/SOURCE_ANALYSIS.md linguist-documentation
