@@ -45,9 +45,13 @@ Working backtest + research engine, fully tested (44 tests, lint-clean). Built s
 Architecture + interfaces: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Decisions
 log: [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
-**Next (needs your input):** the live broker + paper-trading layer requires your
-Kraken API keys, and going live needs your explicit go-ahead (it stays off until
-then, and is locked in code behind `live.confirm`).
+- **Live `KrakenBroker`** — built and proven against a real account in **validate-only**
+  mode (auth, balances, OHLCV, and a `validate=true` order Kraken accepted without
+  placing). Real orders stay locked behind `allow_live` / `live.confirm`.
+
+**Next (needs your go-ahead):** real trading needs USD funding and an explicit decision
+to flip `live.confirm` — and ideally a strategy you actually believe in (not the
+debunked outfits). Until then nothing trades for real.
 
 ## Layout
 
@@ -87,7 +91,7 @@ permissions (you do **not** need withdrawal permission — leave it off).
 2. ✅ **Empirical outfit study** — backtest the outfits across the crypto universe; rank honestly.
 3. ✅ **Risk layer** — risk-based sizing, mandatory stops, crash-proof daily-loss/drawdown kill switch.
 4. 🟦 **Broker abstraction + paper trading** — done: portfolio ledger, `SimulatedBroker`, engine, CLI, paper trading on Kraken's public feed (fake money, no keys). Remaining: live `KrakenBroker` (python-kraken-sdk) — needs your Kraken API keys.
-5. ⬜ **Live (tiny)** — only after the live broker is in, with small size and the kill switch armed (needs your explicit go-ahead).
+5. 🟦 **Live broker** — `KrakenBroker` built and proven in **validate-only** mode against a real account (`python -m smaoutfits check-kraken`). Real orders still OFF — need USD funding, `live.confirm`, and your explicit go-ahead.
 6. ⬜ **Webull adapter** — once your account is verified and you have OpenAPI access (official UAT sandbox needs no approval).
 
 ## License

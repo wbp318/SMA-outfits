@@ -66,10 +66,13 @@ def test_make_broker_refuses_live_without_confirm():
         make_broker(_app("live", confirm=False))
 
 
-def test_make_broker_live_confirmed_not_yet_implemented():
-    # Gate passes, but the real broker isn't built yet -> explicit NotImplementedError.
-    with pytest.raises(NotImplementedError):
-        make_broker(_app("live", confirm=True))
+def test_make_broker_live_confirmed_returns_kraken_broker():
+    # Gate passes -> a real KrakenBroker with live orders unlocked is returned.
+    from smaoutfits.broker_kraken import KrakenBroker
+
+    broker = make_broker(_app("live", confirm=True))
+    assert isinstance(broker, KrakenBroker)
+    assert broker.allow_live is True
 
 
 # -- engine -----------------------------------------------------------------

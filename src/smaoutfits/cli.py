@@ -92,11 +92,42 @@ def cmd_paper(args) -> None:
     print("  NOTE: dry-run over recent public bars; no real orders, no API keys used.")
 
 
+def cmd_check_kraken(args) -> None:
+    """Read-only + validate-only Kraken check. Places NO real order."""
+    from .broker_kraken import KrakenBroker
+    from .types import Order, OrderType, Side
+
+    app, _ = _load_configs()
+    kb = KrakenBroker.from_config(app, allow_live=False)   # cannot place real orders
+    print("system status :", kb._market.get_system_status().get("status"))
+
+    bal = kb.get_balances()
+    nonzero = {k: v for k, v in bal.items() if v > 0}
+    print(f"auth (balances): OK — {len(bal)} assets, {len(nonzero)} funded")
+
+    df = kb.fetch_ohlcv(args.symbol, args.timeframe)
+    print(f"OHLCV {args.symbol} {args.timeframe}: {len(df)} bars, "
+          f"last close {df['close'].iloc[-1]}")
+
+    meta = kb.pair_meta(args.symbol)
+    qty = float(meta.get("ordermin", "0.0001"))
+    resp = kb.validate_order(Order(args.symbol, Side.BUY, qty, OrderType.MARKET))
+    print(f"validate-only BUY {qty} {args.symbol}: OK (NO order placed)")
+    print("  kraken says:", resp.get("descr", resp))
+    print("\nAll checks passed. Real orders remain OFF "
+          "(allow_live=False; needs mode=live + live.confirm).")
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="smaoutfits", description="MA trading framework")
     sub = p.add_subparsers(dest="command", required=True)
 
     sub.add_parser("study", help="run the empirical outfit study").set_defaults(func=cmd_study)
+
+    ck = sub.add_parser("check-kraken", help="read-only + validate-only Kraken connectivity check")
+    ck.add_argument("--symbol", default="BTC/USD")
+    ck.add_argument("--timeframe", "--tf", default="1h")
+    ck.set_defaults(func=cmd_check_kraken)
 
     for name, func in (("backtest", cmd_backtest), ("paper", cmd_paper)):
         sp = sub.add_parser(name, help=f"{name} a strategy")

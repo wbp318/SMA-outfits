@@ -61,6 +61,6 @@ def make_broker(app: AppConfig) -> Broker:
     if app.mode == "live":
         if not app.live_orders_allowed():
             raise RuntimeError("live mode requires live.confirm=true (no-live-orders gate #1)")
-        raise NotImplementedError(
-            "KrakenBroker is not implemented yet — paper trading is built and validated first")
+        from .broker_kraken import KrakenBroker
+        return KrakenBroker.from_config(app, allow_live=True)
     raise ValueError(f"unknown mode {app.mode!r}")

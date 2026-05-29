@@ -2,6 +2,29 @@
 
 All notable changes to this project are documented here.
 
+## [0.3.0] — 2026-05-29
+
+Live Kraken broker — built and **proven safe** against a real account in
+validate-only mode. Still places no real orders.
+
+### Added
+- **`KrakenBroker`** (`broker_kraken.py`) via `python-kraken-sdk`: balances, OHLCV,
+  asset-pair/precision mapping (`BTC/USD` ↔ `XBTUSD`), a `validate_order` dry-run
+  (`validate=true`, places nothing), and a `submit` that **refuses to place a real
+  order unless `allow_live=True`**.
+- `make_broker` now returns `KrakenBroker` for `mode=live` + `live.confirm` (still gated).
+- **CLI `check-kraken`** — read-only + validate-only connectivity check (no real order).
+- Mocked `KrakenBroker` tests, including the "submit refuses without `allow_live`" guard. 59 tests.
+
+### Verified
+- Ran end-to-end against a real Kraken account in **validate-only** mode: auth +
+  balances, OHLCV pull, and a `validate=true` market order that Kraken accepted
+  **without placing anything**.
+
+### Still off
+- **No real orders are placed.** Real trading needs `mode=live` + `live.confirm=true`
+  and, practically, USD funding (risk caps assume a small account).
+
 ## [0.2.0] — 2026-05-29
 
 Paper-trading layer: the engine and broker abstraction that let you forward-test

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "smaoutfits"
-version = "0.2.0"
+version = "0.3.0"
 description = "A moving-average trading framework (backtest -> paper -> live) for Kraken and (later) Webull"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -21,6 +21,7 @@ dependencies = [
 
 [project.optional-dependencies]
 backtest = ["backtesting>=0.3.3", "matplotlib>=3.8"]
+live = ["python-kraken-sdk>=3.2"]
 dev = ["pytest>=8.0", "ruff>=0.4"]
 
 [tool.setuptools.packages.find]
