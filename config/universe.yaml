@@ -1,0 +1,32 @@
+# ---------------------------------------------------------------------------
+# Trading universe.
+#
+# Kraken trades CRYPTO (and a small set of tokenized stocks) — NOT US equities.
+# The equities listed below come from the source analysis and are targets for
+# the WEBULL adapter LATER. They CANNOT be traded on Kraken.
+#
+# Symbols under crypto_kraken use ccxt's unified "BASE/QUOTE" format.
+# ---------------------------------------------------------------------------
+
+crypto_kraken:
+  - BTC/USD
+  - ETH/USD
+  - SOL/USD
+  - XRP/USD
+  - ADA/USD
+  - DOGE/USD
+  - LTC/USD
+  - LINK/USD
+  - DOT/USD
+  - AVAX/USD
+
+# For the Webull adapter (later). Not tradable on Kraken. Non-exhaustive —
+# mirrors the leading-equities list from docs/SOURCE_ANALYSIS.md.
+equities_webull:
+  indices:        [SPX, IXIC, DJI]
+  index_etfs:     [SPY, QQQ, DIA, IWM]
+  leveraged_etfs: [UPRO, TQQQ, SQQQ, UDOW, SDOW, SOXL, SOXS]
+  volatility:     [VIX, VXX, SVIX, UVXY, SVXY]
+  mega_cap:       [AAPL, MSFT, AMZN, GOOG, NVDA, META, TSLA, AMD, NFLX, INTC]
+  other_equities: [COIN, QCOM, PYPL, RBLX, ARM, BRK-B, JPM, V, UNH, TSM, BABA]
+  macro:          [GLD, USO, TLT, TBT, TNX, DXY]

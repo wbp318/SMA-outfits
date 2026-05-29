@@ -1,0 +1,26 @@
+# Core data + config
+pandas>=2.2
+numpy>=1.26
+pyyaml>=6.0
+python-dotenv>=1.0          # load API keys from .env — keys NEVER live in committed files
+pydantic>=2.6              # typed, validated config
+rich>=13.7                 # readable CLI output and logs
+
+# Exchange / broker access (Kraken now; Webull adapter added later)
+ccxt>=4.2                  # unified multi-exchange API
+python-kraken-sdk>=3.1     # Kraken-native REST + WebSocket v2 (evaluated against ccxt in docs/ARCHITECTURE.md)
+
+# Backtesting — final library pinned by the research phase (see docs/ARCHITECTURE.md)
+backtesting>=0.3.3         # backtesting.py: lightweight, event-driven (placeholder; may switch to vectorbt)
+
+# Analysis / plotting
+matplotlib>=3.8
+
+# Dev
+pytest>=8.0
+ruff>=0.4
+
+# Webull (uncomment once you have OpenAPI access)
+# webull-python-sdk-core
+# webull-python-sdk-trade
+# webull-python-sdk-mdata

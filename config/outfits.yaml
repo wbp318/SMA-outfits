@@ -1,0 +1,175 @@
+# ===========================================================================
+# SMA "OUTFITS" — moving-average period sets transcribed from the source repo
+# (see docs/SOURCE_ANALYSIS.md).
+#
+# READ THIS FIRST:
+# The source attributes mystical / numerological meaning to these numbers
+# (presidential-seat numbers, a 9/11 "homage", Waring's-problem integers, etc.)
+# and claims intelligence agencies use them to secretly control markets. We
+# make NO such assumption. A moving average of period 911 has no special power.
+#
+# These sets live here for ONE reason: so the backtester can EMPIRICALLY test
+# whether any of them shows a real, repeatable edge versus buy-and-hold and
+# versus random period sets. Treat every "edge" claim as a hypothesis to be
+# falsified, not a fact. `numerology: true` flags sets whose only stated
+# justification is symbolic.
+# ===========================================================================
+
+outfits:
+  # --- The three "systems" the source treats as primary (these at least map to
+  #     the real, widely-watched golden-cross family) ---
+  - id: sp500
+    periods: [10, 50, 200]
+    label: "S&P — the '10/50/200 System'"
+    note: "50/200 is the genuinely widely watched golden/death cross; worth testing."
+    numerology: false
+  - id: nasdaq
+    periods: [20, 100, 250]
+    label: "NASDAQ"
+    numerology: false
+  - id: dji
+    periods: [30, 60, 90, 300, 600, 900]
+    label: "Dow Jones Industrial"
+    numerology: false
+
+  # --- Symbolic / numerological sets (test, do not trust) ---
+  - id: an_369
+    periods: [33, 66, 99, 333, 666, 999]
+    label: "AN"
+    numerology: true
+  - id: an_148
+    periods: [11, 44, 88, 111, 444, 888]
+    label: "AN"
+    numerology: true
+  - id: an_257
+    periods: [22, 55, 77, 222, 555, 777]
+    label: "AN"
+    numerology: true
+  - id: waring
+    periods: [19, 37, 73, 143, 279, 548]
+    label: "Waring's Problem"
+    numerology: true
+  - id: base2_nvda
+    periods: [16, 32, 64, 128, 256, 512]
+    label: "Base-2 / NVDA"
+    note: "Powers of two — at least a clean mathematical series."
+    numerology: true
+  - id: tsla_420
+    periods: [27, 53, 105, 210, 420, 840]
+    anchor: 420
+    label: "TSLA"
+    numerology: true
+  - id: time_365
+    periods: [23, 46, 91, 183, 365, 730]
+    anchor: 365
+    label: "Time (days/year)"
+    numerology: true
+  - id: time_366
+    periods: [23, 46, 92, 183, 366, 732]
+    anchor: 366
+    label: "Time (leap year)"
+    numerology: true
+  - id: time_1440
+    periods: [18, 36, 72, 144, 288, 576]
+    anchor: 1440
+    label: "Time (minutes/day)"
+    numerology: true
+  - id: resource_404
+    periods: [25, 51, 101, 202, 404, 808]
+    anchor: 404
+    label: "Resource missing (404)"
+    numerology: true
+  - id: pres_45
+    periods: [29, 57, 114, 227, 455, 911]
+    anchor: 45
+    label: "U.S. president seat (45)"
+    numerology: true
+  - id: pres_46
+    periods: [23, 46, 92, 184, 368, 736]
+    anchor: 46
+    label: "U.S. president seat (46)"
+    numerology: true
+  - id: pres_47
+    periods: [24, 47, 94, 188, 376, 752]
+    anchor: 47
+    label: "U.S. president seat (47)"
+    numerology: true
+  - id: speaker_56
+    periods: [28, 56, 112, 224, 448, 896]
+    anchor: 56
+    label: "U.S. speaker of the house seat (56)"
+    numerology: true
+  - id: wtc_911
+    periods: [28, 57, 114, 228, 456, 911]
+    anchor: 911
+    label: "World Trade Center homage (911)"
+    numerology: true
+  - id: russia_2000
+    periods: [16, 31, 63, 125, 250, 500]
+    anchor: 2000
+    label: "Russia president seat, year 2000"
+    numerology: true
+  - id: prc_7
+    periods: [28, 56, 112, 224, 448, 976]
+    anchor: 7
+    label: "PRC Chair (7)"
+    numerology: true
+  - id: france_25
+    periods: [25, 50, 100, 200, 400, 600]
+    anchor: 25
+    label: "France president seat (25)"
+    numerology: true
+  - id: svix_211
+    periods: [26, 52, 106, 211, 422, 844]
+    anchor: 211
+    label: "SVIX"
+    numerology: true
+  - id: turkiye_12
+    periods: [24, 48, 96, 192, 384, 768]
+    anchor: 12
+    label: "Türkiye president seat (12)"
+    numerology: true
+  - id: alphabet_100
+    periods: [25, 50, 100, 200, 400, 800]
+    anchor: 100
+    label: "Alphabet Inc"
+    numerology: true
+  - id: regression_432
+    periods: [27, 54, 108, 216, 432, 864]
+    anchor: 432
+    label: "Regression"
+    numerology: true
+
+# ---------------------------------------------------------------------------
+# The three "systems" with their stated trend rules. The source defines a
+# binary regime (positive/negative) from a fast-vs-slow MA relationship, plus a
+# "key level" long MA, plus a high-volatility variant using a candle close
+# relative to the middle MA. We encode them so they can be backtested as-stated.
+# Instruments here are equity indices (Webull-later); for Kraken we apply the
+# same rule shapes to crypto symbols.
+# ---------------------------------------------------------------------------
+systems:
+  - id: spx_system
+    instrument: SPX
+    outfit_id: sp500
+    timeframes: ["30m"]
+    trend_fast: 10
+    trend_slow: 50           # positive when MA10 > MA50, negative when MA10 < MA50
+    key_level: 200           # MA200 is the major recovery/breakdown level
+    high_vol_level: 50       # under high vol, use candle close vs MA50
+  - id: ixic_system
+    instrument: IXIC
+    outfit_id: nasdaq
+    timeframes: ["20m", "30m"]
+    trend_fast: 20
+    trend_slow: 100
+    key_level: 250
+    high_vol_level: 100
+  - id: dji_system
+    instrument: DJI
+    outfit_id: dji
+    timeframes: ["15m", "1h"]
+    trend_fast: 90
+    trend_slow: 300
+    key_level: 900
+    high_vol_level: 300

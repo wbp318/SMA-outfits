@@ -1,0 +1,36 @@
+# ---------------------------------------------------------------------------
+# Risk controls — "survival-first" defaults reconciled from the risk-research
+# phase (see docs/ARCHITECTURE.md, docs/DECISIONS.md #1). Tuned for a small
+# (~$3k) account that wants to survive, not get rich quick. Every value is a
+# HARD limit enforced BEFORE any order leaves the engine. Edit deliberately.
+# ---------------------------------------------------------------------------
+
+position:
+  sizing: risk_based             # risk_based | fixed_fraction
+  risk_per_trade_pct: 0.0075     # risk 0.75% of equity per trade (paired with the stop)
+  max_position_pct: 0.10         # never more than 10% of equity in one symbol
+  min_position_quote: 25.0       # skip trades smaller than $25 (fees aren't worth it)
+
+stops:
+  require_stop_on_entry: true    # never enter a position without a stop
+  method: atr                    # atr | percent
+  stop_loss_pct: 0.05            # used when method == percent
+  atr_period: 14
+  atr_stop_mult: 2.5             # stop = entry - 2.5 * ATR
+
+portfolio:
+  max_gross_exposure_pct: 0.40   # at most 40% of equity deployed; 60%+ stays in cash
+  max_open_positions: 4
+  max_positions_per_asset: 1     # no pyramiding
+  reserve_cash_pct: 0.10         # always keep >=10% in cash
+
+kill_switch:
+  max_daily_loss_pct: 0.04       # halt ALL trading if equity falls 4% in one day
+  max_drawdown_pct: 0.15         # halt if drawdown from the equity peak exceeds 15%
+  max_consecutive_losses: 5      # halt after 5 losing trades in a row
+  state_file: data/kill_switch_state.json   # persisted so a restart can't bypass a halt
+
+guards:
+  min_seconds_between_orders: 5.0
+  max_order_notional_quote: 1000.0   # absolute ceiling on a single order's notional
+  max_slippage_pct: 0.01             # reject an order if expected slippage exceeds 1%

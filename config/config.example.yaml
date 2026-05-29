@@ -1,0 +1,32 @@
+# ---------------------------------------------------------------------------
+# Copy this file to config/config.yaml and edit. config.yaml is gitignored.
+# API keys come from environment variables / a .env file — NEVER put real
+# keys in any committed file.
+# ---------------------------------------------------------------------------
+
+# backtest -> paper -> live.  Start at backtest. Live order placement is
+# refused by the engine unless mode == live AND live.confirm == true.
+mode: backtest                 # backtest | paper | live
+
+exchange:
+  name: kraken                 # kraken (now) | webull (later)
+  api_key_env: KRAKEN_API_KEY      # name of env var holding the key
+  api_secret_env: KRAKEN_API_SECRET
+
+data:
+  cache_dir: data/cache
+  default_timeframe: 1h
+  history_days: 730            # how much history to pull for backtests
+
+# Files that define what we trade and how:
+universe_file: config/universe.yaml
+outfits_file: config/outfits.yaml
+risk_file: config/risk.yaml
+
+backtest:
+  initial_cash: 10000
+  fee_pct: 0.0026              # Kraken taker fee ~0.26% (verify for your volume tier)
+  slippage_pct: 0.0005         # modeled slippage per fill
+
+live:
+  confirm: false               # must be flipped to true on purpose to allow real orders
